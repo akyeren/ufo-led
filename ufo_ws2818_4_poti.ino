@@ -15,8 +15,7 @@
 // ********* CONFIGURE *******************************************
 // ***************************************************************
 
-const bool gUsePots = true;  // false = manual mode, true = use potentiometers
-
+#define READ_POTS  // undef = manual mode, def = use potentiometers
 #define PULSE_SPEED_MAX 600
 #define PULSE_SPEED_INIT 50  // 0 .. 600 Pulse Speed, > 600 no Pulse
 #define BRIGHTNESS_INIT 170  // 0 .. 255
@@ -129,8 +128,6 @@ void setSmallRing(unsigned speed) {
     }
 
     Serial.println(" ");
-    // delay(20);
-    return;
 }
 
 // **************************************************************************************************************
@@ -165,9 +162,6 @@ void showSolid(void) {
 
     FastLED.show();
     delay(100);
-
-out:
-    return;
 }
 
 void setLargeRingLed(unsigned index, int sat, int level) {
@@ -207,19 +201,22 @@ void showRunningLights(unsigned speed, unsigned largeRingIndex, int level) {
     delay(10);
 }
 
+void readPots() {
+    gPulseSpeed = 1024 - analogRead(PIN_POT_PULSE_SPEED);
+    gHueSmallRing = 252 - map(analogRead(PIN_POT_SMALL_COLOR), 0, 1024, 0, 255);
+    gHueLargeRing = 252 - map(analogRead(PIN_POT_LARGE_COLOR), 0, 1024, 0, 255);
+    gBrightness = 254 - map(analogRead(PIN_POT_BRIGHTNESS), 0, 1024, 0, 255);
+}
+
 // **************************************************************************************************************
 void loop() {
     int speed = 1;
 
     for (unsigned largeRingIndex = 0; largeRingIndex < NUM_LEDS_LARGE_RING; i++) {
         for (int level = 0; level < LEVEL_MAX / 3; level += speed) {
-            if (gUsePots) {
-                gPulseSpeed = 1024 - analogRead(PIN_POT_PULSE_SPEED);
-                gHueSmallRing = 252 - map(analogRead(PIN_POT_SMALL_COLOR), 0, 1024, 0, 255);
-                gHueLargeRing = 252 - map(analogRead(PIN_POT_LARGE_COLOR), 0, 1024, 0, 255);
-                gBrightness = 254 - map(analogRead(PIN_POT_BRIGHTNESS), 0, 1024, 0, 255);
-            }
-
+#ifdef READ_POTS
+            readPots();
+#endif
             if (gPulseSpeed > PULSE_SPEED_MAX) {
                 showSolid();
                 goto out;
