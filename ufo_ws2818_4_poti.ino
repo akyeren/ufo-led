@@ -41,11 +41,11 @@ int iColorLargeRing = 192;  // 0 .. 255
 #define SEGMENT_SIZE 3
 #define POTI_ANZ_LESEN 10
 
-#define LED_PIN 4
-#define LED_PIN_RING 6
+#define LED_PIN_LARGE_RING 4
+#define LED_PIN_SMALL_RING 6
 
-#define NUM_LEDS 30
-#define NUM_LEDS_RING 7
+#define NUM_LEDS_LARGE_RING 30
+#define NUM_LEDS_SMALL_RING 7
 
 #define POTI_SPEED A0
 #define POTI_LARGE_COLOR A2
@@ -54,19 +54,19 @@ int iColorLargeRing = 192;  // 0 .. 255
 
 #define LED_TYPE WS2811
 #define COLOR_ORDER GRB
-CRGB leds[NUM_LEDS];
-CRGB ledsRing[NUM_LEDS_RING];
+CRGB ledsLargeRing[NUM_LEDS_LARGE_RING];
+CRGB ledsSmallRing[NUM_LEDS_SMALL_RING];
 
 // **************************************************************************************************************
 void setup() {
     delay(3000);  // power-up safety delay
 
-    FastLED.addLeds<LED_TYPE, LED_PIN_RING, COLOR_ORDER>(
-        ledsRing, NUM_LEDS_RING);  //.setCorrection( TypicalLEDStrip );
+    FastLED.addLeds<LED_TYPE, LED_PIN_SMALL_RING, COLOR_ORDER>(
+        ledsSmallRing, NUM_LEDS_SMALL_RING);  //.setCorrection( TypicalLEDStrip );
     FastLED.setBrightness(BRIGHTNESS);
 
-    FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(
-        leds, NUM_LEDS);  //.setCorrection( TypicalLEDStrip );
+    FastLED.addLeds<LED_TYPE, LED_PIN_LARGE_RING, COLOR_ORDER>(
+        ledsLargeRing, NUM_LEDS_LARGE_RING);  //.setCorrection( TypicalLEDStrip );
     FastLED.setBrightness(BRIGHTNESS);
 
     Serial.begin(9600);
@@ -77,27 +77,27 @@ void setSmallRing(int iSpeed) {
     static int iRing[] = {0, 0, 100, 0, 0, 0, 0};
     static int iPos = 2;
 
-    if (iRing[iPos % NUM_LEDS_RING] >= 200) {
-        iRing[(iPos - 2) % NUM_LEDS_RING] = 0;
+    if (iRing[iPos % NUM_LEDS_SMALL_RING] >= 200) {
+        iRing[(iPos - 2) % NUM_LEDS_SMALL_RING] = 0;
         iPos++;
     }
 
-    if (iRing[(iPos - 2) % NUM_LEDS_RING] > 0) {
-        iRing[(iPos - 2) % NUM_LEDS_RING] -= iSpeed;
+    if (iRing[(iPos - 2) % NUM_LEDS_SMALL_RING] > 0) {
+        iRing[(iPos - 2) % NUM_LEDS_SMALL_RING] -= iSpeed;
     } else {
-        iRing[(iPos - 2) % NUM_LEDS_RING] = 0;
+        iRing[(iPos - 2) % NUM_LEDS_SMALL_RING] = 0;
     }
 
-    if (iRing[(iPos - 1) % NUM_LEDS_RING] > 0) {
-        iRing[(iPos - 1) % NUM_LEDS_RING] -= iSpeed;
+    if (iRing[(iPos - 1) % NUM_LEDS_SMALL_RING] > 0) {
+        iRing[(iPos - 1) % NUM_LEDS_SMALL_RING] -= iSpeed;
     } else {
-        iRing[(iPos - 1) % NUM_LEDS_RING] = 0;
+        iRing[(iPos - 1) % NUM_LEDS_SMALL_RING] = 0;
     }
 
-    iRing[(iPos + 0) % NUM_LEDS_RING] += iSpeed;
+    iRing[(iPos + 0) % NUM_LEDS_SMALL_RING] += iSpeed;
 
     // Ring belegen
-    for (int k = 0; k < NUM_LEDS_RING; k++) {
+    for (int k = 0; k < NUM_LEDS_SMALL_RING; k++) {
         Serial.print(" ");
         Serial.print(iRing[k]);
 
@@ -106,19 +106,19 @@ void setSmallRing(int iSpeed) {
         }
 
         if (iRing[k] < 20) {
-            ledsRing[k] = CRGB::Black;
+            ledsSmallRing[k] = CRGB::Black;
         } else {
             if (iBrightness <= 1) {
-                ledsRing[k] = CRGB::Black;
+                ledsSmallRing[k] = CRGB::Black;
             } else {
                 if (iColorSmallRing >= 1) {
-                    ledsRing[k] = CHSV(iColorSmallRing, 255, iRing[k]);
+                    ledsSmallRing[k] = CHSV(iColorSmallRing, 255, iRing[k]);
 
                 } else {
-                    ledsRing[k] = CHSV(iColorSmallRing, 0, iRing[k]);
+                    ledsSmallRing[k] = CHSV(iColorSmallRing, 0, iRing[k]);
                 }
 
-                ledsRing[k].fadeLightBy(255 - iBrightness);
+                ledsSmallRing[k].fadeLightBy(255 - iBrightness);
             }
         }
     }
@@ -130,31 +130,31 @@ void setSmallRing(int iSpeed) {
 
 // **************************************************************************************************************
 void dauerbrenner(void) {
-    for (int k = 0; k < NUM_LEDS; k++) {
+    for (int k = 0; k < NUM_LEDS_LARGE_RING; k++) {
         if (iColorLargeRing >= 1) {
-            leds[k] = CHSV(iColorLargeRing, 255, 255);
+            ledsLargeRing[k] = CHSV(iColorLargeRing, 255, 255);
         } else {
-            leds[k] = CHSV(iColorLargeRing, 0, 255);
+            ledsLargeRing[k] = CHSV(iColorLargeRing, 0, 255);
         }
 
         if (iBrightness <= 1) {
-            leds[k] = CRGB::Black;
+            ledsLargeRing[k] = CRGB::Black;
         } else {
-            leds[k].fadeLightBy(255 - iBrightness);
+            ledsLargeRing[k].fadeLightBy(255 - iBrightness);
         }
     }
 
-    for (int k = 0; k < NUM_LEDS_RING; k++) {
+    for (int k = 0; k < NUM_LEDS_SMALL_RING; k++) {
         if (iColorSmallRing >= 1) {
-            ledsRing[k] = CHSV(iColorSmallRing, 255, 255);
+            ledsSmallRing[k] = CHSV(iColorSmallRing, 255, 255);
         } else {
-            ledsRing[k] = CHSV(iColorSmallRing, 0, 255);
+            ledsSmallRing[k] = CHSV(iColorSmallRing, 0, 255);
         }
 
         if (iBrightness <= 1) {
-            ledsRing[k] = CRGB::Black;
+            ledsSmallRing[k] = CRGB::Black;
         } else {
-            ledsRing[k].fadeLightBy(255 - iBrightness);
+            ledsSmallRing[k].fadeLightBy(255 - iBrightness);
         }
     }
 
@@ -193,17 +193,17 @@ void showRunningLights(int iPoti, int *i_Speed, int i, int j) {
     }
 
     for (int k = 0; k < SEGMENT_SIZE; k++) {
-        leds[((NUM_LEDS + i + (k * NUM_LEDS / SEGMENT_SIZE)) + 0) % NUM_LEDS] =
+        ledsLargeRing[((NUM_LEDS_LARGE_RING + i + (k * NUM_LEDS_LARGE_RING / SEGMENT_SIZE)) + 0) % NUM_LEDS_LARGE_RING] =
             CHSV(iColorLargeRing, iHue, min(L_MAX - c, iBrightness));
-        leds[((NUM_LEDS + i + (k * NUM_LEDS / SEGMENT_SIZE)) + 1) % NUM_LEDS] =
+        ledsLargeRing[((NUM_LEDS_LARGE_RING + i + (k * NUM_LEDS_LARGE_RING / SEGMENT_SIZE)) + 1) % NUM_LEDS_LARGE_RING] =
             CHSV(iColorLargeRing, iHue, min(L_MAX - b, iBrightness));
-        leds[((NUM_LEDS + i + (k * NUM_LEDS / SEGMENT_SIZE)) + 2) % NUM_LEDS] =
+        ledsLargeRing[((NUM_LEDS_LARGE_RING + i + (k * NUM_LEDS_LARGE_RING / SEGMENT_SIZE)) + 2) % NUM_LEDS_LARGE_RING] =
             CHSV(iColorLargeRing, iHue, min(L_MAX - a, iBrightness));
-        leds[((NUM_LEDS + i + (k * NUM_LEDS / SEGMENT_SIZE)) + 3) % NUM_LEDS] =
+        ledsLargeRing[((NUM_LEDS_LARGE_RING + i + (k * NUM_LEDS_LARGE_RING / SEGMENT_SIZE)) + 3) % NUM_LEDS_LARGE_RING] =
             CHSV(iColorLargeRing, iHue, min(c, iBrightness));
-        leds[((NUM_LEDS + i + (k * NUM_LEDS / SEGMENT_SIZE)) + 4) % NUM_LEDS] =
+        ledsLargeRing[((NUM_LEDS_LARGE_RING + i + (k * NUM_LEDS_LARGE_RING / SEGMENT_SIZE)) + 4) % NUM_LEDS_LARGE_RING] =
             CHSV(iColorLargeRing, iHue, min(b, iBrightness));
-        leds[((NUM_LEDS + i + (k * NUM_LEDS / SEGMENT_SIZE)) + 5) % NUM_LEDS] =
+        ledsLargeRing[((NUM_LEDS_LARGE_RING + i + (k * NUM_LEDS_LARGE_RING / SEGMENT_SIZE)) + 5) % NUM_LEDS_LARGE_RING] =
             CHSV(iColorLargeRing, iHue, min(a, iBrightness));
     }
 
@@ -211,7 +211,7 @@ void showRunningLights(int iPoti, int *i_Speed, int i, int j) {
     setSmallRing(smallRingSpeed);
 
     for (int k = 0; k < SEGMENT_SIZE; k++) {
-        leds[((NUM_LEDS + i) + (k * NUM_LEDS / SEGMENT_SIZE)) % NUM_LEDS] =
+        ledsLargeRing[((NUM_LEDS_LARGE_RING + i) + (k * NUM_LEDS_LARGE_RING / SEGMENT_SIZE)) % NUM_LEDS_LARGE_RING] =
             CRGB::Black;
     }
 
@@ -223,7 +223,7 @@ void showRunningLights(int iPoti, int *i_Speed, int i, int j) {
 void loop() {
     int iSpeed = 1;
 
-    for (int i = 0; i < NUM_LEDS; i++) {
+    for (int i = 0; i < NUM_LEDS_LARGE_RING; i++) {
         for (int j = 0; j < L_MAX / 3; j = j + iSpeed) {
             if (!noPoti) {
                 iPulse = 1024 - analogRead(POTI_SPEED);
