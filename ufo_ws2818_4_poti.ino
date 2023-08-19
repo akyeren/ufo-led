@@ -18,11 +18,38 @@
 const bool gUsePots = true;  // false = manual mode, true = use potentiometers
 
 #define PULSE_SPEED_MAX 600
-#define PULSE_SPEED_DEFAULT 50
+#define PULSE_SPEED_INIT 50  // 0 .. 600 Pulse Speed, > 600 no Pulse
+#define BRIGHTNESS_INIT 170  // 0 .. 255
 
-int gPulseSpeed = 50;   // 0 .. 600 Pulse Speed, > 600 no Pulse
-int gBrightness = 170;  // 0 .. 255
+// ***************************************************************
+// ***************************************************************
+// ***************************************************************
+// Animation settings
+#define LED_BRIGHTNESS 255
+#define L_MAX 255
+#define SEGMENT_SIZE 3
 
+// Ring sizes
+#define NUM_LEDS_LARGE_RING 30
+#define NUM_LEDS_SMALL_RING 7
+
+// Pin configuration
+#define PIN_LED_LARGE_RING 4  // D4
+#define PIN_LED_SMALL_RING 6  // D6
+#define PIN_POT_PULSE_SPEED A0
+#define PIN_POT_LARGE_COLOR A2
+#define PIN_POT_SMALL_COLOR A4
+#define PIN_POT_BRIGHTNESS A6
+
+// LED HW settings
+#define LED_TYPE WS2811
+#define COLOR_ORDER GRB
+
+// Globals
+CRGB ledsLargeRing[NUM_LEDS_LARGE_RING];
+CRGB ledsSmallRing[NUM_LEDS_SMALL_RING];
+int gPulseSpeed = PULSE_SPEED_INIT;
+int gBrightness = BRIGHTNESS_INIT;
 // 0   = White
 // 32  = Orange
 // 64  = Yellow
@@ -31,43 +58,18 @@ int gBrightness = 170;  // 0 .. 255
 // 160 = Blue
 // 192 = Purple
 // 224 = Pink
-
 int gHueSmallRing = 96;   // 0 .. 255
 int gHueLargeRing = 192;  // 0 .. 255
-
-// ***************************************************************
-// ***************************************************************
-// ***************************************************************
-
-#define LED_BRIGHTNESS 255
-#define L_MAX 255
-#define SEGMENT_SIZE 3
-
-#define LED_PIN_LARGE_RING 4
-#define LED_PIN_SMALL_RING 6
-
-#define NUM_LEDS_LARGE_RING 30
-#define NUM_LEDS_SMALL_RING 7
-
-#define POTI_PULSE_SPEED A0
-#define POTI_LARGE_COLOR A2
-#define POTI_SMALL_COLOR A4
-#define POTI_BRIGHTNESS A6
-
-#define LED_TYPE WS2811
-#define COLOR_ORDER GRB
-CRGB ledsLargeRing[NUM_LEDS_LARGE_RING];
-CRGB ledsSmallRing[NUM_LEDS_SMALL_RING];
 
 // **************************************************************************************************************
 void setup() {
     delay(3000);  // power-up safety delay
 
-    FastLED.addLeds<LED_TYPE, LED_PIN_SMALL_RING, COLOR_ORDER>(
+    FastLED.addLeds<LED_TYPE, PIN_LED_SMALL_RING, COLOR_ORDER>(
         ledsSmallRing, NUM_LEDS_SMALL_RING);  //.setCorrection( TypicalLEDStrip );
     FastLED.setBrightness(LED_BRIGHTNESS);
 
-    FastLED.addLeds<LED_TYPE, LED_PIN_LARGE_RING, COLOR_ORDER>(
+    FastLED.addLeds<LED_TYPE, PIN_LED_LARGE_RING, COLOR_ORDER>(
         ledsLargeRing, NUM_LEDS_LARGE_RING);  //.setCorrection( TypicalLEDStrip );
     FastLED.setBrightness(LED_BRIGHTNESS);
 
@@ -215,10 +217,10 @@ void loop() {
     for (int i = 0; i < NUM_LEDS_LARGE_RING; i++) {
         for (int j = 0; j < L_MAX / 3; j += speed) {
             if (gUsePots) {
-                gPulseSpeed = 1024 - analogRead(POTI_PULSE_SPEED);
-                gHueSmallRing = 252 - map(analogRead(POTI_SMALL_COLOR), 0, 1024, 0, 255);
-                gHueLargeRing = 252 - map(analogRead(POTI_LARGE_COLOR), 0, 1024, 0, 255);
-                gBrightness = 254 - map(analogRead(POTI_BRIGHTNESS), 0, 1024, 0, 255);
+                gPulseSpeed = 1024 - analogRead(PIN_POT_PULSE_SPEED);
+                gHueSmallRing = 252 - map(analogRead(PIN_POT_SMALL_COLOR), 0, 1024, 0, 255);
+                gHueLargeRing = 252 - map(analogRead(PIN_POT_LARGE_COLOR), 0, 1024, 0, 255);
+                gBrightness = 254 - map(analogRead(PIN_POT_BRIGHTNESS), 0, 1024, 0, 255);
             }
 
             if (gPulseSpeed > 600) {
