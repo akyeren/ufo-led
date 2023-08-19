@@ -46,21 +46,22 @@
 // Globals
 CRGB ledsLargeRing[NUM_LEDS_LARGE_RING];
 CRGB ledsSmallRing[NUM_LEDS_SMALL_RING];
-word gPulseSpeed = PULSE_SPEED_INIT;
-byte gBrightness = BRIGHTNESS_INIT;
 
-// Hue
-byte gHueSmallRing = HUE_GREEN;
-byte gHueLargeRing = HUE_PURPLE;
-// https://github.com/FastLED/FastLED/blob/master/src/pixeltypes.h#L109
-// 0   = HUE_RED
-// 32  = HUE_ORANGE
-// 64  = HUE_YELLOW
-// 96  = HUE_GREEN
-// 128 = HUE_AQUA
-// 160 = HUE_BLUE
-// 192 = HUE_PURPLE
-// 224 = HUE_PINK
+struct Pots {
+    word pulseSpeed = PULSE_SPEED_INIT;
+    byte brightness = BRIGHTNESS_INIT;
+    byte hueSmallRing = HUE_GREEN;
+    byte hueLargeRing = HUE_PURPLE;
+    // https://github.com/FastLED/FastLED/blob/master/src/pixeltypes.h#L109
+    // 0   = HUE_RED
+    // 32  = HUE_ORANGE
+    // 64  = HUE_YELLOW
+    // 96  = HUE_GREEN
+    // 128 = HUE_AQUA
+    // 160 = HUE_BLUE
+    // 192 = HUE_PURPLE
+    // 224 = HUE_PINK
+};
 
 // Macros
 #define MakeHsv(h, v) CHSV(h, (h >= 1) ? 255 : 0, v)
@@ -86,7 +87,7 @@ void dimRingLed(int ring[], byte size, byte index, byte offset, byte dec) {
 }
 
 // **************************************************************************************************************
-void setSmallRing(byte speed) {
+void setSmallRing(byte speed, const Pots& pots) {
     static int ring[] = {0, 0, 100, 0, 0, 0, 0};
     static auto index = 2;  // 0 .. NUM_LEDS_SMALL_RING - 1
     static const auto MaxVal = 200;
@@ -112,11 +113,11 @@ void setSmallRing(byte speed) {
         if (ring[k] < 20) {
             ledsSmallRing[k] = CRGB::Black;
         } else {
-            if (gBrightness <= 1) {
+            if (pots.brightness <= 1) {
                 ledsSmallRing[k] = CRGB::Black;
             } else {
-                ledsSmallRing[k] = MakeHsv(gHueSmallRing, ring[k]);
-                ledsSmallRing[k].fadeLightBy(255 - gBrightness);
+                ledsSmallRing[k] = MakeHsv(pots.hueSmallRing, ring[k]);
+                ledsSmallRing[k].fadeLightBy(255 - pots.brightness);
             }
         }
     }
@@ -127,22 +128,22 @@ void setSmallRing(byte speed) {
 }
 
 // **************************************************************************************************************
-void showSolid() {
+void showSolid(const Pots& pots) {
     for (auto k = 0; k < NUM_LEDS_LARGE_RING; ++k) {
-        ledsLargeRing[k] = MakeHsv(gHueLargeRing, 255);
-        if (gBrightness <= 1) {
+        ledsLargeRing[k] = MakeHsv(pots.hueLargeRing, 255);
+        if (pots.brightness <= 1) {
             ledsLargeRing[k] = CRGB::Black;
         } else {
-            ledsLargeRing[k].fadeLightBy(255 - gBrightness);
+            ledsLargeRing[k].fadeLightBy(255 - pots.brightness);
         }
     }
 
     for (auto k = 0; k < NUM_LEDS_SMALL_RING; ++k) {
-        ledsSmallRing[k] = MakeHsv(gHueSmallRing, 255);
-        if (gBrightness <= 1) {
+        ledsSmallRing[k] = MakeHsv(pots.hueSmallRing, 255);
+        if (pots.brightness <= 1) {
             ledsSmallRing[k] = CRGB::Black;
         } else {
-            ledsSmallRing[k].fadeLightBy(255 - gBrightness);
+            ledsSmallRing[k].fadeLightBy(255 - pots.brightness);
         }
     }
 
@@ -151,12 +152,12 @@ void showSolid() {
 }
 
 // **************************************************************************************************************
-void showRunningLights(byte speed, byte largeRingIndex, byte level) {
+void showRunningLights(byte speed, byte largeRingIndex, byte level, const Pots& pots) {
     // Large Ring
     const auto a = level;
     const auto b = level + (LEVEL_MAX / 3);
     const auto c = level + (LEVEL_MAX / 3) * 2;
-    const auto sat = gHueLargeRing < 1 ? 0 : 255;
+    const auto sat = pots.hueLargeRing < 1 ? 0 : 255;
     const auto NUM_LEDS = 6;
     const byte levels[] = {LEVEL_MAX - c, LEVEL_MAX - b, LEVEL_MAX - a,
                            c, b, a};  // NUM_LEDS
@@ -165,13 +166,13 @@ void showRunningLights(byte speed, byte largeRingIndex, byte level) {
         const auto index = largeRingIndex + seg * NUM_LEDS_LARGE_SEGMENT;
         for (auto offset = 0; offset < NUM_LEDS; ++offset) {
             ledsLargeRing[(index + offset) % NUM_LEDS_LARGE_RING] =
-                CHSV(gHueLargeRing, sat, min(levels[offset], gBrightness));
+                CHSV(pots.hueLargeRing, sat, min(levels[offset], pots.brightness));
         }
     }
 
     // Small ring
     const auto smallRingSpeed = max(1, speed / 5);
-    setSmallRing(smallRingSpeed);
+    setSmallRing(smallRingSpeed, pots);
 
     for (auto seg = 0; seg < SEGMENT_SIZE; ++seg) {
         ledsLargeRing[(largeRingIndex + seg * NUM_LEDS_LARGE_SEGMENT) % NUM_LEDS_LARGE_RING] =
@@ -182,30 +183,32 @@ void showRunningLights(byte speed, byte largeRingIndex, byte level) {
     delay(10);
 }
 
-void readPots() {
-    gPulseSpeed = 1024 - analogRead(PIN_POT_PULSE_SPEED);
-    gHueSmallRing = 252 - map(analogRead(PIN_POT_SMALL_COLOR), 0, 1024, 0, 255);
-    gHueLargeRing = 252 - map(analogRead(PIN_POT_LARGE_COLOR), 0, 1024, 0, 255);
-    gBrightness = 254 - map(analogRead(PIN_POT_BRIGHTNESS), 0, 1024, 0, 255);
+#ifdef READ_POTS
+void readPots(Pots& pots) {
+    pots.pulseSpeed = 1024 - analogRead(PIN_POT_PULSE_SPEED);
+    pots.brightness = 254 - map(analogRead(PIN_POT_BRIGHTNESS), 0, 1024, 0, 255);
+    pots.hueSmallRing = 252 - map(analogRead(PIN_POT_SMALL_COLOR), 0, 1024, 0, 255);
+    pots.hueLargeRing = 252 - map(analogRead(PIN_POT_LARGE_COLOR), 0, 1024, 0, 255);
 }
+#endif
 
 // **************************************************************************************************************
 void loop() {
     auto speed = 1;
     bool finishLoop = false;
-
+    Pots pots;
     for (auto largeRingIndex = 0; largeRingIndex < NUM_LEDS_LARGE_RING && !finishLoop; ++largeRingIndex) {
         for (auto level = 0; level < LEVEL_MAX / 3; level += speed) {
 #ifdef READ_POTS
-            readPots();
+            readPots(pots);
 #endif
-            if (gPulseSpeed > PULSE_SPEED_MAX) {
-                showSolid();
+            if (pots.pulseSpeed > PULSE_SPEED_MAX) {
+                showSolid(pots);
                 finishLoop = true;
                 break;
             } else {
-                speed = max(1, map(gPulseSpeed, 0, PULSE_SPEED_MAX, 0, 150));
-                showRunningLights(speed, largeRingIndex, level);
+                speed = max(1, map(pots.pulseSpeed, 0, PULSE_SPEED_MAX, 0, 150));
+                showRunningLights(speed, largeRingIndex, level, pots);
             }
         }
     }
