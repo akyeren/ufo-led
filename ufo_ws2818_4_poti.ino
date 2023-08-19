@@ -170,42 +170,36 @@ out:
     return;
 }
 
+void setLargeRingLed(unsigned index, int sat, int level) {
+    ledsLargeRing[index % NUM_LEDS_LARGE_RING] =
+        CHSV(gHueLargeRing, sat, min(level, gBrightness));
+}
+
 // **************************************************************************************************************
 void showRunningLights(unsigned speed, unsigned largeRingIndex, int level) {
-    int a, b, c;
-    int sat = 0;
-    const unsigned smallRingSpeed = max(1, speed / 5);
-
     // Large Ring
-    a = level;
-    b = level + (LEVEL_MAX / 3);
-    c = level + (LEVEL_MAX / 3) * 2;
-
-    if (gHueLargeRing >= 1) {
-        sat = 255;
-    }
+    const int a = level;
+    const int b = level + (LEVEL_MAX / 3);
+    const int c = level + (LEVEL_MAX / 3) * 2;
+    const int sat = gHueLargeRing < 1 ? 0 : 255;
+    const unsigned NUM_LEDS = 6;
 
     for (unsigned seg = 0; seg < SEGMENT_SIZE; seg++) {
-        const unsigned index = largeRingIndex + (seg * NUM_LEDS_LARGE_SEGMENT);
-        ledsLargeRing[(index + 0) % NUM_LEDS_LARGE_RING] =
-            CHSV(gHueLargeRing, sat, min(LEVEL_MAX - c, gBrightness));
-        ledsLargeRing[(index + 1) % NUM_LEDS_LARGE_RING] =
-            CHSV(gHueLargeRing, sat, min(LEVEL_MAX - b, gBrightness));
-        ledsLargeRing[(index + 2) % NUM_LEDS_LARGE_RING] =
-            CHSV(gHueLargeRing, sat, min(LEVEL_MAX - a, gBrightness));
-        ledsLargeRing[(index + 3) % NUM_LEDS_LARGE_RING] =
-            CHSV(gHueLargeRing, sat, min(c, gBrightness));
-        ledsLargeRing[(index + 4) % NUM_LEDS_LARGE_RING] =
-            CHSV(gHueLargeRing, sat, min(b, gBrightness));
-        ledsLargeRing[(index + 5) % NUM_LEDS_LARGE_RING] =
-            CHSV(gHueLargeRing, sat, min(a, gBrightness));
+        const unsigned index = largeRingIndex + seg * NUM_LEDS_LARGE_SEGMENT;
+        const int levels[] = {LEVEL_MAX - c, LEVEL_MAX - b, LEVEL_MAX - c,
+                              c, b, a};  // NUM_LEDS
+
+        for (unsigned offset = 0; offset < NUM_LEDS; ++offset) {
+            setLargeRingLed(index + offset, sat, levels[offset]);
+        }
     }
 
     // Small ring
+    const unsigned smallRingSpeed = max(1, speed / 5);
     setSmallRing(smallRingSpeed);
 
     for (unsigned seg = 0; seg < SEGMENT_SIZE; seg++) {
-        ledsLargeRing[(largeRingIndex + (seg * NUM_LEDS_LARGE_SEGMENT)) % NUM_LEDS_LARGE_RING] =
+        ledsLargeRing[(largeRingIndex + seg * NUM_LEDS_LARGE_SEGMENT) % NUM_LEDS_LARGE_RING] =
             CRGB::Black;
     }
 
