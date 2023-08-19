@@ -127,7 +127,7 @@ void setSmallRing(int iSpeed) {
 }
 
 // **************************************************************************************************************
-void dauerbrenner(void) {
+void showSolid(void) {
     for (int k = 0; k < NUM_LEDS_LARGE_RING; k++) {
         if (gHueLargeRing >= 1) {
             ledsLargeRing[k] = CHSV(gHueLargeRing, 255, 255);
@@ -231,7 +231,7 @@ void loop() {
             }
 
             if (iPulse > 600) {
-                dauerbrenner();
+                showSolid();
                 goto out;
             } else {
                 showRunningLights(iPulse, &iSpeed, i, j);
