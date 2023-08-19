@@ -62,6 +62,9 @@ int gBrightness = BRIGHTNESS_INIT;
 int gHueSmallRing = 96;   // 0 .. 255
 int gHueLargeRing = 192;  // 0 .. 255
 
+// Macros
+#define MakeHsv(h, v) CHSV(h, (h >= 1) ? 255 : 0, v)
+
 // **************************************************************************************************************
 void setup() {
     delay(3000);  // power-up safety delay
@@ -116,12 +119,7 @@ void setSmallRing(unsigned speed) {
             if (gBrightness <= 1) {
                 ledsSmallRing[k] = CRGB::Black;
             } else {
-                if (gHueSmallRing >= 1) {
-                    ledsSmallRing[k] = CHSV(gHueSmallRing, 255, iRing[k]);
-                } else {
-                    ledsSmallRing[k] = CHSV(gHueSmallRing, 0, iRing[k]);
-                }
-
+                ledsSmallRing[k] = MakeHsv(gHueSmallRing, iRing[k]);
                 ledsSmallRing[k].fadeLightBy(255 - gBrightness);
             }
         }
@@ -133,12 +131,7 @@ void setSmallRing(unsigned speed) {
 // **************************************************************************************************************
 void showSolid(void) {
     for (unsigned k = 0; k < NUM_LEDS_LARGE_RING; k++) {
-        if (gHueLargeRing >= 1) {
-            ledsLargeRing[k] = CHSV(gHueLargeRing, 255, 255);
-        } else {
-            ledsLargeRing[k] = CHSV(gHueLargeRing, 0, 255);
-        }
-
+        ledsLargeRing[k] = MakeHsv(gHueLargeRing, 255);
         if (gBrightness <= 1) {
             ledsLargeRing[k] = CRGB::Black;
         } else {
@@ -147,12 +140,7 @@ void showSolid(void) {
     }
 
     for (unsigned k = 0; k < NUM_LEDS_SMALL_RING; k++) {
-        if (gHueSmallRing >= 1) {
-            ledsSmallRing[k] = CHSV(gHueSmallRing, 255, 255);
-        } else {
-            ledsSmallRing[k] = CHSV(gHueSmallRing, 0, 255);
-        }
-
+        ledsSmallRing[k] = MakeHsv(gHueSmallRing, 255);
         if (gBrightness <= 1) {
             ledsSmallRing[k] = CRGB::Black;
         } else {
