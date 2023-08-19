@@ -73,7 +73,7 @@ void setup() {
 }
 
 // **************************************************************************************************************
-void kleinerRing(int iSpeed) {
+void setSmallRing(int iSpeed) {
     static int iRing[] = {0, 0, 100, 0, 0, 0, 0};
     static int iPos = 2;
 
@@ -169,7 +169,7 @@ out:
 void lauflicht(int iPoti, int *i_Speed, int i, int j) {
     int a, b, c;
     int iHue = 0;
-    int iKleinerRingSpeed = *i_Speed / 5;
+    int smallRingSpeed = *i_Speed / 5;
 
     *i_Speed = map(iPoti, 0, 600, 0, 150);
 
@@ -177,10 +177,10 @@ void lauflicht(int iPoti, int *i_Speed, int i, int j) {
         *i_Speed = 1;
     }
 
-    // kleiner Ring
-    iKleinerRingSpeed = *i_Speed / 5;
-    if (iKleinerRingSpeed == 0) {
-        iKleinerRingSpeed = 1;
+    // Small Ring
+    smallRingSpeed = *i_Speed / 5;
+    if (smallRingSpeed == 0) {
+        smallRingSpeed = 1;
     }
 
     // GROßER RING
@@ -207,8 +207,8 @@ void lauflicht(int iPoti, int *i_Speed, int i, int j) {
             CHSV(iColorBigRing, iHue, min(a, iBrightness));
     }
 
-    // KLEINER RING
-    kleinerRing(iKleinerRingSpeed);
+    // Small ring
+    setSmallRing(smallRingSpeed);
 
     for (int k = 0; k < SEGMENT_SIZE; k++) {
         leds[((NUM_LEDS + i) + (k * NUM_LEDS / SEGMENT_SIZE)) % NUM_LEDS] =
