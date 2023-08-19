@@ -87,7 +87,7 @@ void setSmallRing(unsigned speed) {
 
     if (iRing[iPos % NUM_LEDS_SMALL_RING] >= 200) {
         iRing[(iPos - 2) % NUM_LEDS_SMALL_RING] = 0;
-        iPos++;
+        ++iPos;
     }
 
     if (iRing[(iPos - 2) % NUM_LEDS_SMALL_RING] > 0) {
@@ -105,7 +105,7 @@ void setSmallRing(unsigned speed) {
     iRing[(iPos + 0) % NUM_LEDS_SMALL_RING] += speed;
 
     // Set ring
-    for (unsigned k = 0; k < NUM_LEDS_SMALL_RING; k++) {
+    for (unsigned k = 0; k < NUM_LEDS_SMALL_RING; ++k) {
         Serial.print(" ");
         Serial.print(iRing[k]);
 
@@ -130,7 +130,7 @@ void setSmallRing(unsigned speed) {
 
 // **************************************************************************************************************
 void showSolid(void) {
-    for (unsigned k = 0; k < NUM_LEDS_LARGE_RING; k++) {
+    for (unsigned k = 0; k < NUM_LEDS_LARGE_RING; ++k) {
         ledsLargeRing[k] = MakeHsv(gHueLargeRing, 255);
         if (gBrightness <= 1) {
             ledsLargeRing[k] = CRGB::Black;
@@ -139,7 +139,7 @@ void showSolid(void) {
         }
     }
 
-    for (unsigned k = 0; k < NUM_LEDS_SMALL_RING; k++) {
+    for (unsigned k = 0; k < NUM_LEDS_SMALL_RING; ++k) {
         ledsSmallRing[k] = MakeHsv(gHueSmallRing, 255);
         if (gBrightness <= 1) {
             ledsSmallRing[k] = CRGB::Black;
@@ -166,7 +166,7 @@ void showRunningLights(unsigned speed, unsigned largeRingIndex, int level) {
     const int sat = gHueLargeRing < 1 ? 0 : 255;
     const unsigned NUM_LEDS = 6;
 
-    for (unsigned seg = 0; seg < SEGMENT_SIZE; seg++) {
+    for (unsigned seg = 0; seg < SEGMENT_SIZE; ++seg) {
         const unsigned index = largeRingIndex + seg * NUM_LEDS_LARGE_SEGMENT;
         const int levels[] = {LEVEL_MAX - c, LEVEL_MAX - b, LEVEL_MAX - c,
                               c, b, a};  // NUM_LEDS
@@ -180,7 +180,7 @@ void showRunningLights(unsigned speed, unsigned largeRingIndex, int level) {
     const unsigned smallRingSpeed = max(1, speed / 5);
     setSmallRing(smallRingSpeed);
 
-    for (unsigned seg = 0; seg < SEGMENT_SIZE; seg++) {
+    for (unsigned seg = 0; seg < SEGMENT_SIZE; ++seg) {
         ledsLargeRing[(largeRingIndex + seg * NUM_LEDS_LARGE_SEGMENT) % NUM_LEDS_LARGE_RING] =
             CRGB::Black;
     }
@@ -200,7 +200,7 @@ void readPots() {
 void loop() {
     int speed = 1;
 
-    for (unsigned largeRingIndex = 0; largeRingIndex < NUM_LEDS_LARGE_RING; largeRingIndex++) {
+    for (unsigned largeRingIndex = 0; largeRingIndex < NUM_LEDS_LARGE_RING; ++largeRingIndex) {
         for (int level = 0; level < LEVEL_MAX / 3; level += speed) {
 #ifdef READ_POTS
             readPots();
