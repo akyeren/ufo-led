@@ -166,7 +166,7 @@ out:
 }
 
 // **************************************************************************************************************
-void lauflicht(int iPoti, int *i_Speed, int i, int j) {
+void showRunningLights(int iPoti, int *i_Speed, int i, int j) {
     int a, b, c;
     int iHue = 0;
     int smallRingSpeed = *i_Speed / 5;
@@ -237,7 +237,7 @@ void loop() {
                 dauerbrenner();
                 goto out;
             } else {
-                lauflicht(iPulse, &iSpeed, i, j);
+                showRunningLights(iPulse, &iSpeed, i, j);
             }
         }
     }
