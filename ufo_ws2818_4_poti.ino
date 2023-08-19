@@ -204,15 +204,17 @@ void readPots() {
 // **************************************************************************************************************
 void loop() {
     int speed = 1;
+    bool finishLoop = false;
 
-    for (unsigned largeRingIndex = 0; largeRingIndex < NUM_LEDS_LARGE_RING; ++largeRingIndex) {
+    for (unsigned largeRingIndex = 0; largeRingIndex < NUM_LEDS_LARGE_RING && !finishLoop; ++largeRingIndex) {
         for (int level = 0; level < LEVEL_MAX / 3; level += speed) {
 #ifdef READ_POTS
             readPots();
 #endif
             if (gPulseSpeed > PULSE_SPEED_MAX) {
                 showSolid();
-                goto out;
+                finishLoop = true;
+                break;
             } else {
                 speed = max(1, map(gPulseSpeed, 0, PULSE_SPEED_MAX, 0, 150));
                 showRunningLights(speed, largeRingIndex, level);
@@ -220,6 +222,5 @@ void loop() {
         }
     }
 
-out:
     delay(1);
 }
