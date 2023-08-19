@@ -39,7 +39,6 @@ int iColorLargeRing = 192;  // 0 .. 255
 #define BRIGHTNESS 255
 #define L_MAX 255
 #define SEGMENT_SIZE 3
-#define POTI_ANZ_LESEN 10
 
 #define LED_PIN_LARGE_RING 4
 #define LED_PIN_SMALL_RING 6
