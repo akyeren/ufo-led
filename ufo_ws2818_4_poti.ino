@@ -183,7 +183,7 @@ void lauflicht(int iPoti, int *i_Speed, int i, int j) {
         smallRingSpeed = 1;
     }
 
-    // GROßER RING
+    // Large Ring
     a = j;
     b = j + (L_MAX / 3);
     c = j + (L_MAX / 3) * 2;
