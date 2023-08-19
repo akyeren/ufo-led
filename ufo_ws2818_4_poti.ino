@@ -15,10 +15,13 @@
 // ********* CONFIGURE *******************************************
 // ***************************************************************
 
-int noPoti = false;  // true = manual mode, false = use potentiometers
+const bool gUsePots = true;  // false = manual mode, true = use potentiometers
 
-int iPulse = 50;        // 0 .. 600 Pulse Speed, > 600 no Pulse
-int iBrightness = 170;  // 0 .. 255
+#define PULSE_SPEED_MAX 600
+#define PULSE_SPEED_DEFAULT 50
+
+int gPulseSpeed = 50;   // 0 .. 600 Pulse Speed, > 600 no Pulse
+int gBrightness = 170;  // 0 .. 255
 
 // 0   = White
 // 32  = Orange
@@ -46,7 +49,7 @@ int gHueLargeRing = 192;  // 0 .. 255
 #define NUM_LEDS_LARGE_RING 30
 #define NUM_LEDS_SMALL_RING 7
 
-#define POTI_SPEED A0
+#define POTI_PULSE_SPEED A0
 #define POTI_LARGE_COLOR A2
 #define POTI_SMALL_COLOR A4
 #define POTI_BRIGHTNESS A6
@@ -107,7 +110,7 @@ void setSmallRing(int iSpeed) {
         if (iRing[k] < 20) {
             ledsSmallRing[k] = CRGB::Black;
         } else {
-            if (iBrightness <= 1) {
+            if (gBrightness <= 1) {
                 ledsSmallRing[k] = CRGB::Black;
             } else {
                 if (gHueSmallRing >= 1) {
@@ -116,7 +119,7 @@ void setSmallRing(int iSpeed) {
                     ledsSmallRing[k] = CHSV(gHueSmallRing, 0, iRing[k]);
                 }
 
-                ledsSmallRing[k].fadeLightBy(255 - iBrightness);
+                ledsSmallRing[k].fadeLightBy(255 - gBrightness);
             }
         }
     }
@@ -135,10 +138,10 @@ void showSolid(void) {
             ledsLargeRing[k] = CHSV(gHueLargeRing, 0, 255);
         }
 
-        if (iBrightness <= 1) {
+        if (gBrightness <= 1) {
             ledsLargeRing[k] = CRGB::Black;
         } else {
-            ledsLargeRing[k].fadeLightBy(255 - iBrightness);
+            ledsLargeRing[k].fadeLightBy(255 - gBrightness);
         }
     }
 
@@ -149,10 +152,10 @@ void showSolid(void) {
             ledsSmallRing[k] = CHSV(gHueSmallRing, 0, 255);
         }
 
-        if (iBrightness <= 1) {
+        if (gBrightness <= 1) {
             ledsSmallRing[k] = CRGB::Black;
         } else {
-            ledsSmallRing[k].fadeLightBy(255 - iBrightness);
+            ledsSmallRing[k].fadeLightBy(255 - gBrightness);
         }
     }
 
@@ -164,22 +167,10 @@ out:
 }
 
 // **************************************************************************************************************
-void showRunningLights(int iPoti, int *i_Speed, int i, int j) {
+void showRunningLights(int speed, int i, int j) {
     int a, b, c;
     int sat = 0;
-    int smallRingSpeed = *i_Speed / 5;
-
-    *i_Speed = map(iPoti, 0, 600, 0, 150);
-
-    if (*i_Speed == 0) {
-        *i_Speed = 1;
-    }
-
-    // Small Ring
-    smallRingSpeed = *i_Speed / 5;
-    if (smallRingSpeed == 0) {
-        smallRingSpeed = 1;
-    }
+    const int smallRingSpeed = max(1, speed / 5);
 
     // Large Ring
     a = j;
@@ -192,17 +183,17 @@ void showRunningLights(int iPoti, int *i_Speed, int i, int j) {
 
     for (int k = 0; k < SEGMENT_SIZE; k++) {
         ledsLargeRing[((NUM_LEDS_LARGE_RING + i + (k * NUM_LEDS_LARGE_RING / SEGMENT_SIZE)) + 0) % NUM_LEDS_LARGE_RING] =
-            CHSV(gHueLargeRing, sat, min(L_MAX - c, iBrightness));
+            CHSV(gHueLargeRing, sat, min(L_MAX - c, gBrightness));
         ledsLargeRing[((NUM_LEDS_LARGE_RING + i + (k * NUM_LEDS_LARGE_RING / SEGMENT_SIZE)) + 1) % NUM_LEDS_LARGE_RING] =
-            CHSV(gHueLargeRing, sat, min(L_MAX - b, iBrightness));
+            CHSV(gHueLargeRing, sat, min(L_MAX - b, gBrightness));
         ledsLargeRing[((NUM_LEDS_LARGE_RING + i + (k * NUM_LEDS_LARGE_RING / SEGMENT_SIZE)) + 2) % NUM_LEDS_LARGE_RING] =
-            CHSV(gHueLargeRing, sat, min(L_MAX - a, iBrightness));
+            CHSV(gHueLargeRing, sat, min(L_MAX - a, gBrightness));
         ledsLargeRing[((NUM_LEDS_LARGE_RING + i + (k * NUM_LEDS_LARGE_RING / SEGMENT_SIZE)) + 3) % NUM_LEDS_LARGE_RING] =
-            CHSV(gHueLargeRing, sat, min(c, iBrightness));
+            CHSV(gHueLargeRing, sat, min(c, gBrightness));
         ledsLargeRing[((NUM_LEDS_LARGE_RING + i + (k * NUM_LEDS_LARGE_RING / SEGMENT_SIZE)) + 4) % NUM_LEDS_LARGE_RING] =
-            CHSV(gHueLargeRing, sat, min(b, iBrightness));
+            CHSV(gHueLargeRing, sat, min(b, gBrightness));
         ledsLargeRing[((NUM_LEDS_LARGE_RING + i + (k * NUM_LEDS_LARGE_RING / SEGMENT_SIZE)) + 5) % NUM_LEDS_LARGE_RING] =
-            CHSV(gHueLargeRing, sat, min(a, iBrightness));
+            CHSV(gHueLargeRing, sat, min(a, gBrightness));
     }
 
     // Small ring
@@ -219,22 +210,23 @@ void showRunningLights(int iPoti, int *i_Speed, int i, int j) {
 
 // **************************************************************************************************************
 void loop() {
-    int iSpeed = 1;
+    int speed = 1;
 
     for (int i = 0; i < NUM_LEDS_LARGE_RING; i++) {
-        for (int j = 0; j < L_MAX / 3; j = j + iSpeed) {
-            if (!noPoti) {
-                iPulse = 1024 - analogRead(POTI_SPEED);
+        for (int j = 0; j < L_MAX / 3; j += speed) {
+            if (gUsePots) {
+                gPulseSpeed = 1024 - analogRead(POTI_PULSE_SPEED);
                 gHueSmallRing = 252 - map(analogRead(POTI_SMALL_COLOR), 0, 1024, 0, 255);
                 gHueLargeRing = 252 - map(analogRead(POTI_LARGE_COLOR), 0, 1024, 0, 255);
-                iBrightness = 254 - map(analogRead(POTI_BRIGHTNESS), 0, 1024, 0, 255);
+                gBrightness = 254 - map(analogRead(POTI_BRIGHTNESS), 0, 1024, 0, 255);
             }
 
-            if (iPulse > 600) {
+            if (gPulseSpeed > 600) {
                 showSolid();
                 goto out;
             } else {
-                showRunningLights(iPulse, &iSpeed, i, j);
+                speed = max(1, map(gPulseSpeed, 0, PULSE_SPEED_MAX, 0, 150));
+                showRunningLights(speed, i, j);
             }
         }
     }
