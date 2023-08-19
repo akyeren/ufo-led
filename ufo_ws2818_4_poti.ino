@@ -200,7 +200,7 @@ void readPots() {
 void loop() {
     int speed = 1;
 
-    for (unsigned largeRingIndex = 0; largeRingIndex < NUM_LEDS_LARGE_RING; i++) {
+    for (unsigned largeRingIndex = 0; largeRingIndex < NUM_LEDS_LARGE_RING; largeRingIndex++) {
         for (int level = 0; level < LEVEL_MAX / 3; level += speed) {
 #ifdef READ_POTS
             readPots();
