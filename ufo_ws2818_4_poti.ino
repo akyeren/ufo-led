@@ -26,12 +26,14 @@ const bool gUsePots = true;  // false = manual mode, true = use potentiometers
 // ***************************************************************
 // Animation settings
 #define LED_BRIGHTNESS 255
-#define L_MAX 255
-#define SEGMENT_SIZE 3
+#define LEVEL_MAX 255
 
 // Ring sizes
 #define NUM_LEDS_LARGE_RING 30
 #define NUM_LEDS_SMALL_RING 7
+#define SEGMENT_SIZE 3  // # of groups to divide the large ring into
+
+#define NUM_LEDS_LARGE_SEGMENT = NUM_LEDS_LARGE_RING / SEGMENT_SIZE
 
 // Pin configuration
 #define PIN_LED_LARGE_RING 4  // D4
@@ -77,7 +79,7 @@ void setup() {
 }
 
 // **************************************************************************************************************
-void setSmallRing(int iSpeed) {
+void setSmallRing(unsigned speed) {
     static int iRing[] = {0, 0, 100, 0, 0, 0, 0};
     static int iPos = 2;
 
@@ -87,21 +89,21 @@ void setSmallRing(int iSpeed) {
     }
 
     if (iRing[(iPos - 2) % NUM_LEDS_SMALL_RING] > 0) {
-        iRing[(iPos - 2) % NUM_LEDS_SMALL_RING] -= iSpeed;
+        iRing[(iPos - 2) % NUM_LEDS_SMALL_RING] -= speed;
     } else {
         iRing[(iPos - 2) % NUM_LEDS_SMALL_RING] = 0;
     }
 
     if (iRing[(iPos - 1) % NUM_LEDS_SMALL_RING] > 0) {
-        iRing[(iPos - 1) % NUM_LEDS_SMALL_RING] -= iSpeed;
+        iRing[(iPos - 1) % NUM_LEDS_SMALL_RING] -= speed;
     } else {
         iRing[(iPos - 1) % NUM_LEDS_SMALL_RING] = 0;
     }
 
-    iRing[(iPos + 0) % NUM_LEDS_SMALL_RING] += iSpeed;
+    iRing[(iPos + 0) % NUM_LEDS_SMALL_RING] += speed;
 
-    // Ring belegen
-    for (int k = 0; k < NUM_LEDS_SMALL_RING; k++) {
+    // Set ring
+    for (unsigned k = 0; k < NUM_LEDS_SMALL_RING; k++) {
         Serial.print(" ");
         Serial.print(iRing[k]);
 
@@ -133,7 +135,7 @@ void setSmallRing(int iSpeed) {
 
 // **************************************************************************************************************
 void showSolid(void) {
-    for (int k = 0; k < NUM_LEDS_LARGE_RING; k++) {
+    for (unsigned k = 0; k < NUM_LEDS_LARGE_RING; k++) {
         if (gHueLargeRing >= 1) {
             ledsLargeRing[k] = CHSV(gHueLargeRing, 255, 255);
         } else {
@@ -147,7 +149,7 @@ void showSolid(void) {
         }
     }
 
-    for (int k = 0; k < NUM_LEDS_SMALL_RING; k++) {
+    for (unsigned k = 0; k < NUM_LEDS_SMALL_RING; k++) {
         if (gHueSmallRing >= 1) {
             ledsSmallRing[k] = CHSV(gHueSmallRing, 255, 255);
         } else {
@@ -169,40 +171,41 @@ out:
 }
 
 // **************************************************************************************************************
-void showRunningLights(int speed, int i, int j) {
+void showRunningLights(unsigned speed, unsigned largeRingIndex, int level) {
     int a, b, c;
     int sat = 0;
-    const int smallRingSpeed = max(1, speed / 5);
+    const unsigned smallRingSpeed = max(1, speed / 5);
 
     // Large Ring
-    a = j;
-    b = j + (L_MAX / 3);
-    c = j + (L_MAX / 3) * 2;
+    a = level;
+    b = level + (LEVEL_MAX / 3);
+    c = level + (LEVEL_MAX / 3) * 2;
 
     if (gHueLargeRing >= 1) {
         sat = 255;
     }
 
-    for (int k = 0; k < SEGMENT_SIZE; k++) {
-        ledsLargeRing[((NUM_LEDS_LARGE_RING + i + (k * NUM_LEDS_LARGE_RING / SEGMENT_SIZE)) + 0) % NUM_LEDS_LARGE_RING] =
-            CHSV(gHueLargeRing, sat, min(L_MAX - c, gBrightness));
-        ledsLargeRing[((NUM_LEDS_LARGE_RING + i + (k * NUM_LEDS_LARGE_RING / SEGMENT_SIZE)) + 1) % NUM_LEDS_LARGE_RING] =
-            CHSV(gHueLargeRing, sat, min(L_MAX - b, gBrightness));
-        ledsLargeRing[((NUM_LEDS_LARGE_RING + i + (k * NUM_LEDS_LARGE_RING / SEGMENT_SIZE)) + 2) % NUM_LEDS_LARGE_RING] =
-            CHSV(gHueLargeRing, sat, min(L_MAX - a, gBrightness));
-        ledsLargeRing[((NUM_LEDS_LARGE_RING + i + (k * NUM_LEDS_LARGE_RING / SEGMENT_SIZE)) + 3) % NUM_LEDS_LARGE_RING] =
+    for (unsigned seg = 0; seg < SEGMENT_SIZE; seg++) {
+        const unsigned index = largeRingIndex + (seg * NUM_LEDS_LARGE_SEGMENT);
+        ledsLargeRing[(index + 0) % NUM_LEDS_LARGE_RING] =
+            CHSV(gHueLargeRing, sat, min(LEVEL_MAX - c, gBrightness));
+        ledsLargeRing[(index + 1) % NUM_LEDS_LARGE_RING] =
+            CHSV(gHueLargeRing, sat, min(LEVEL_MAX - b, gBrightness));
+        ledsLargeRing[(index + 2) % NUM_LEDS_LARGE_RING] =
+            CHSV(gHueLargeRing, sat, min(LEVEL_MAX - a, gBrightness));
+        ledsLargeRing[(index + 3) % NUM_LEDS_LARGE_RING] =
             CHSV(gHueLargeRing, sat, min(c, gBrightness));
-        ledsLargeRing[((NUM_LEDS_LARGE_RING + i + (k * NUM_LEDS_LARGE_RING / SEGMENT_SIZE)) + 4) % NUM_LEDS_LARGE_RING] =
+        ledsLargeRing[(index + 4) % NUM_LEDS_LARGE_RING] =
             CHSV(gHueLargeRing, sat, min(b, gBrightness));
-        ledsLargeRing[((NUM_LEDS_LARGE_RING + i + (k * NUM_LEDS_LARGE_RING / SEGMENT_SIZE)) + 5) % NUM_LEDS_LARGE_RING] =
+        ledsLargeRing[(index + 5) % NUM_LEDS_LARGE_RING] =
             CHSV(gHueLargeRing, sat, min(a, gBrightness));
     }
 
     // Small ring
     setSmallRing(smallRingSpeed);
 
-    for (int k = 0; k < SEGMENT_SIZE; k++) {
-        ledsLargeRing[((NUM_LEDS_LARGE_RING + i) + (k * NUM_LEDS_LARGE_RING / SEGMENT_SIZE)) % NUM_LEDS_LARGE_RING] =
+    for (unsigned seg = 0; seg < SEGMENT_SIZE; seg++) {
+        ledsLargeRing[(largeRingIndex + (seg * NUM_LEDS_LARGE_SEGMENT)) % NUM_LEDS_LARGE_RING] =
             CRGB::Black;
     }
 
@@ -214,8 +217,8 @@ void showRunningLights(int speed, int i, int j) {
 void loop() {
     int speed = 1;
 
-    for (int i = 0; i < NUM_LEDS_LARGE_RING; i++) {
-        for (int j = 0; j < L_MAX / 3; j += speed) {
+    for (unsigned largeRingIndex = 0; largeRingIndex < NUM_LEDS_LARGE_RING; i++) {
+        for (int level = 0; level < LEVEL_MAX / 3; level += speed) {
             if (gUsePots) {
                 gPulseSpeed = 1024 - analogRead(PIN_POT_PULSE_SPEED);
                 gHueSmallRing = 252 - map(analogRead(PIN_POT_SMALL_COLOR), 0, 1024, 0, 255);
@@ -223,12 +226,12 @@ void loop() {
                 gBrightness = 254 - map(analogRead(PIN_POT_BRIGHTNESS), 0, 1024, 0, 255);
             }
 
-            if (gPulseSpeed > 600) {
+            if (gPulseSpeed > PULSE_SPEED_MAX) {
                 showSolid();
                 goto out;
             } else {
                 speed = max(1, map(gPulseSpeed, 0, PULSE_SPEED_MAX, 0, 150));
-                showRunningLights(speed, i, j);
+                showRunningLights(speed, largeRingIndex, level);
             }
         }
     }
