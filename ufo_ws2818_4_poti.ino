@@ -19,6 +19,7 @@
 #define PULSE_SPEED_MAX 600
 #define PULSE_SPEED_INIT 50  // 0 .. 600 Pulse Speed, > 600 no Pulse
 #define BRIGHTNESS_INIT 170  // 0 .. 255
+#define DBG_PRINT            // printing debug to serial message
 
 // ***************************************************************
 // ***************************************************************
@@ -106,8 +107,10 @@ void setSmallRing(unsigned speed) {
 
     // Set ring
     for (unsigned k = 0; k < NUM_LEDS_SMALL_RING; ++k) {
+#ifdef DBG_PRINT
         Serial.print(" ");
         Serial.print(iRing[k]);
+#endif
 
         if (iRing[k] < 0) {
             iRing[k] = 0;
@@ -125,7 +128,9 @@ void setSmallRing(unsigned speed) {
         }
     }
 
+#ifdef DBG_PRINT
     Serial.println(" ");
+#endif
 }
 
 // **************************************************************************************************************
