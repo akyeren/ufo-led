@@ -36,7 +36,7 @@ int gHueLargeRing = 192;  // 0 .. 255
 // ***************************************************************
 // ***************************************************************
 
-#define BRIGHTNESS 255
+#define LED_BRIGHTNESS 255
 #define L_MAX 255
 #define SEGMENT_SIZE 3
 
@@ -62,11 +62,11 @@ void setup() {
 
     FastLED.addLeds<LED_TYPE, LED_PIN_SMALL_RING, COLOR_ORDER>(
         ledsSmallRing, NUM_LEDS_SMALL_RING);  //.setCorrection( TypicalLEDStrip );
-    FastLED.setBrightness(BRIGHTNESS);
+    FastLED.setBrightness(LED_BRIGHTNESS);
 
     FastLED.addLeds<LED_TYPE, LED_PIN_LARGE_RING, COLOR_ORDER>(
         ledsLargeRing, NUM_LEDS_LARGE_RING);  //.setCorrection( TypicalLEDStrip );
-    FastLED.setBrightness(BRIGHTNESS);
+    FastLED.setBrightness(LED_BRIGHTNESS);
 
     Serial.begin(9600);
 }
