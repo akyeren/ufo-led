@@ -38,7 +38,7 @@ int iColorBigRing = 192;   // 0 .. 255
 
 #define BRIGHTNESS 255
 #define L_MAX 255
-#define ANZ_SEGMENTE 3
+#define SEGMENT_SIZE 3
 #define POTI_ANZ_LESEN 10
 
 #define LED_PIN 4
@@ -192,26 +192,26 @@ void lauflicht(int iPoti, int *i_Speed, int i, int j) {
         iHue = 255;
     }
 
-    for (int k = 0; k < ANZ_SEGMENTE; k++) {
-        leds[((NUM_LEDS + i + (k * NUM_LEDS / ANZ_SEGMENTE)) + 0) % NUM_LEDS] =
+    for (int k = 0; k < SEGMENT_SIZE; k++) {
+        leds[((NUM_LEDS + i + (k * NUM_LEDS / SEGMENT_SIZE)) + 0) % NUM_LEDS] =
             CHSV(iColorBigRing, iHue, min(L_MAX - c, iBrightness));
-        leds[((NUM_LEDS + i + (k * NUM_LEDS / ANZ_SEGMENTE)) + 1) % NUM_LEDS] =
+        leds[((NUM_LEDS + i + (k * NUM_LEDS / SEGMENT_SIZE)) + 1) % NUM_LEDS] =
             CHSV(iColorBigRing, iHue, min(L_MAX - b, iBrightness));
-        leds[((NUM_LEDS + i + (k * NUM_LEDS / ANZ_SEGMENTE)) + 2) % NUM_LEDS] =
+        leds[((NUM_LEDS + i + (k * NUM_LEDS / SEGMENT_SIZE)) + 2) % NUM_LEDS] =
             CHSV(iColorBigRing, iHue, min(L_MAX - a, iBrightness));
-        leds[((NUM_LEDS + i + (k * NUM_LEDS / ANZ_SEGMENTE)) + 3) % NUM_LEDS] =
+        leds[((NUM_LEDS + i + (k * NUM_LEDS / SEGMENT_SIZE)) + 3) % NUM_LEDS] =
             CHSV(iColorBigRing, iHue, min(c, iBrightness));
-        leds[((NUM_LEDS + i + (k * NUM_LEDS / ANZ_SEGMENTE)) + 4) % NUM_LEDS] =
+        leds[((NUM_LEDS + i + (k * NUM_LEDS / SEGMENT_SIZE)) + 4) % NUM_LEDS] =
             CHSV(iColorBigRing, iHue, min(b, iBrightness));
-        leds[((NUM_LEDS + i + (k * NUM_LEDS / ANZ_SEGMENTE)) + 5) % NUM_LEDS] =
+        leds[((NUM_LEDS + i + (k * NUM_LEDS / SEGMENT_SIZE)) + 5) % NUM_LEDS] =
             CHSV(iColorBigRing, iHue, min(a, iBrightness));
     }
 
     // KLEINER RING
     kleinerRing(iKleinerRingSpeed);
 
-    for (int k = 0; k < ANZ_SEGMENTE; k++) {
-        leds[((NUM_LEDS + i) + (k * NUM_LEDS / ANZ_SEGMENTE)) % NUM_LEDS] =
+    for (int k = 0; k < SEGMENT_SIZE; k++) {
+        leds[((NUM_LEDS + i) + (k * NUM_LEDS / SEGMENT_SIZE)) % NUM_LEDS] =
             CRGB::Black;
     }
 
