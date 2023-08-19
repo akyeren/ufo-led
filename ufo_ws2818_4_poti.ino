@@ -21,9 +21,6 @@
 #define BRIGHTNESS_INIT 170  // 0 .. 255
 #define DBG_PRINT            // printing debug to serial message
 
-// ***************************************************************
-// ***************************************************************
-// ***************************************************************
 // Animation settings
 #define LED_BRIGHTNESS 255
 #define LEVEL_MAX 255
@@ -50,18 +47,21 @@
 // Globals
 CRGB ledsLargeRing[NUM_LEDS_LARGE_RING];
 CRGB ledsSmallRing[NUM_LEDS_SMALL_RING];
-int gPulseSpeed = PULSE_SPEED_INIT;
-int gBrightness = BRIGHTNESS_INIT;
-// 0   = White
-// 32  = Orange
-// 64  = Yellow
-// 96  = Green
-// 128 = Aqua
-// 160 = Blue
-// 192 = Purple
-// 224 = Pink
-int gHueSmallRing = 96;   // 0 .. 255
-int gHueLargeRing = 192;  // 0 .. 255
+word gPulseSpeed = PULSE_SPEED_INIT;
+byte gBrightness = BRIGHTNESS_INIT;
+
+// Hue
+byte gHueSmallRing = HUE_GREEN;
+byte gHueLargeRing = HUE_PURPLE;
+// https://github.com/FastLED/FastLED/blob/master/src/pixeltypes.h#L109
+// 0   = HUE_RED
+// 32  = HUE_ORANGE
+// 64  = HUE_YELLOW
+// 96  = HUE_GREEN
+// 128 = HUE_AQUA
+// 160 = HUE_BLUE
+// 192 = HUE_PURPLE
+// 224 = HUE_PINK
 
 // Macros
 #define MakeHsv(h, v) CHSV(h, (h >= 1) ? 255 : 0, v)
@@ -84,7 +84,7 @@ void setup() {
 // **************************************************************************************************************
 void setSmallRing(unsigned speed) {
     static int iRing[] = {0, 0, 100, 0, 0, 0, 0};
-    static int iPos = 2;
+    static byte iPos = 2;
 
     if (iRing[iPos % NUM_LEDS_SMALL_RING] >= 200) {
         iRing[(iPos - 2) % NUM_LEDS_SMALL_RING] = 0;
@@ -106,7 +106,7 @@ void setSmallRing(unsigned speed) {
     iRing[(iPos + 0) % NUM_LEDS_SMALL_RING] += speed;
 
     // Set ring
-    for (unsigned k = 0; k < NUM_LEDS_SMALL_RING; ++k) {
+    for (byte k = 0; k < NUM_LEDS_SMALL_RING; ++k) {
 #ifdef DBG_PRINT
         Serial.print(" ");
         Serial.print(iRing[k]);
@@ -134,8 +134,8 @@ void setSmallRing(unsigned speed) {
 }
 
 // **************************************************************************************************************
-void showSolid(void) {
-    for (unsigned k = 0; k < NUM_LEDS_LARGE_RING; ++k) {
+void showSolid() {
+    for (byte k = 0; k < NUM_LEDS_LARGE_RING; ++k) {
         ledsLargeRing[k] = MakeHsv(gHueLargeRing, 255);
         if (gBrightness <= 1) {
             ledsLargeRing[k] = CRGB::Black;
@@ -144,7 +144,7 @@ void showSolid(void) {
         }
     }
 
-    for (unsigned k = 0; k < NUM_LEDS_SMALL_RING; ++k) {
+    for (byte k = 0; k < NUM_LEDS_SMALL_RING; ++k) {
         ledsSmallRing[k] = MakeHsv(gHueSmallRing, 255);
         if (gBrightness <= 1) {
             ledsSmallRing[k] = CRGB::Black;
@@ -157,35 +157,30 @@ void showSolid(void) {
     delay(100);
 }
 
-void setLargeRingLed(unsigned index, int sat, int level) {
-    ledsLargeRing[index % NUM_LEDS_LARGE_RING] =
-        CHSV(gHueLargeRing, sat, min(level, gBrightness));
-}
-
 // **************************************************************************************************************
-void showRunningLights(unsigned speed, unsigned largeRingIndex, int level) {
+void showRunningLights(word speed, byte largeRingIndex, byte level) {
     // Large Ring
-    const int a = level;
-    const int b = level + (LEVEL_MAX / 3);
-    const int c = level + (LEVEL_MAX / 3) * 2;
-    const int sat = gHueLargeRing < 1 ? 0 : 255;
-    const unsigned NUM_LEDS = 6;
+    const byte a = level;
+    const byte b = level + (LEVEL_MAX / 3);
+    const byte c = level + (LEVEL_MAX / 3) * 2;
+    const byte sat = gHueLargeRing < 1 ? 0 : 255;
+    const byte NUM_LEDS = 6;
+    const byte levels[] = {LEVEL_MAX - c, LEVEL_MAX - b, LEVEL_MAX - a,
+                           c, b, a};  // NUM_LEDS
 
-    for (unsigned seg = 0; seg < SEGMENT_SIZE; ++seg) {
-        const unsigned index = largeRingIndex + seg * NUM_LEDS_LARGE_SEGMENT;
-        const int levels[] = {LEVEL_MAX - c, LEVEL_MAX - b, LEVEL_MAX - c,
-                              c, b, a};  // NUM_LEDS
-
-        for (unsigned offset = 0; offset < NUM_LEDS; ++offset) {
-            setLargeRingLed(index + offset, sat, levels[offset]);
+    for (byte seg = 0; seg < SEGMENT_SIZE; ++seg) {
+        const byte index = largeRingIndex + seg * NUM_LEDS_LARGE_SEGMENT;
+        for (byte offset = 0; offset < NUM_LEDS; ++offset) {
+            ledsLargeRing[(index + offset) % NUM_LEDS_LARGE_RING] =
+                CHSV(gHueLargeRing, sat, min(levels[offset], gBrightness));
         }
     }
 
     // Small ring
-    const unsigned smallRingSpeed = max(1, speed / 5);
+    const word smallRingSpeed = max(1, speed / 5);
     setSmallRing(smallRingSpeed);
 
-    for (unsigned seg = 0; seg < SEGMENT_SIZE; ++seg) {
+    for (byte seg = 0; seg < SEGMENT_SIZE; ++seg) {
         ledsLargeRing[(largeRingIndex + seg * NUM_LEDS_LARGE_SEGMENT) % NUM_LEDS_LARGE_RING] =
             CRGB::Black;
     }
@@ -203,11 +198,11 @@ void readPots() {
 
 // **************************************************************************************************************
 void loop() {
-    int speed = 1;
+    word speed = 1;
     bool finishLoop = false;
 
-    for (unsigned largeRingIndex = 0; largeRingIndex < NUM_LEDS_LARGE_RING && !finishLoop; ++largeRingIndex) {
-        for (int level = 0; level < LEVEL_MAX / 3; level += speed) {
+    for (byte largeRingIndex = 0; largeRingIndex < NUM_LEDS_LARGE_RING && !finishLoop; ++largeRingIndex) {
+        for (byte level = 0; level < LEVEL_MAX / 3; level += speed) {
 #ifdef READ_POTS
             readPots();
 #endif
