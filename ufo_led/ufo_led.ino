@@ -14,10 +14,10 @@
 // ********* CONFIGURE *******************************************
 // ***************************************************************
 
-#define READ_POTS  // undef = manual mode, def = use potentiometers
+// #define READ_POTS  // undef = manual mode, def = use potentiometers
 #define PULSE_SPEED_MAX 600
-#define PULSE_SPEED_INIT 50  // 0 .. 600 Pulse Speed, > 600 no Pulse
-#define BRIGHTNESS_INIT 170  // 0 .. 255
+#define PULSE_SPEED_INIT 300  // 0 .. 600 Pulse Speed, > 600 no Pulse
+#define BRIGHTNESS_INIT 40  // 0 .. 255
 #define DBG_PRINT            // printing debug to serial message
 
 // Animation settings
@@ -51,7 +51,7 @@ struct Pots {
     word pulseSpeed = PULSE_SPEED_INIT;
     byte brightness = BRIGHTNESS_INIT;
     byte hueSmallRing = HUE_GREEN;
-    byte hueLargeRing = HUE_PURPLE;
+    byte hueLargeRing = HUE_BLUE;
     // https://github.com/FastLED/FastLED/blob/master/src/pixeltypes.h#L109
     // 0   = HUE_RED
     // 32  = HUE_ORANGE
