@@ -16,9 +16,9 @@
 
 // #define READ_POTS  // undef = manual mode, def = use potentiometers
 #define PULSE_SPEED_MAX 600
-#define PULSE_SPEED_INIT 300  // 0 .. 600 Pulse Speed, > 600 no Pulse
-#define BRIGHTNESS_INIT 40  // 0 .. 255
-#define DBG_PRINT            // printing debug to serial message
+#define PULSE_SPEED_INIT 100  // 0 .. 600 Pulse Speed, > 600 no Pulse
+#define BRIGHTNESS_INIT 10    // 0 .. 255
+#define DBG_PRINT             // printing debug to serial message
 
 // Animation settings
 #define LED_BRIGHTNESS 255
@@ -40,7 +40,7 @@
 #define PIN_POT_BRIGHTNESS A6
 
 // LED HW settings
-#define LED_TYPE WS2811
+#define LED_TYPE WS2812B
 #define COLOR_ORDER GRB
 
 // Globals
@@ -68,8 +68,6 @@ struct Pots {
 
 // **************************************************************************************************************
 void setup() {
-    delay(3000);  // power-up safety delay
-
     FastLED.addLeds<LED_TYPE, PIN_LED_SMALL_RING, COLOR_ORDER>(
         ledsSmallRing, NUM_LEDS_SMALL_RING);  //.setCorrection( TypicalLEDStrip );
     FastLED.setBrightness(LED_BRIGHTNESS);
@@ -77,6 +75,9 @@ void setup() {
     FastLED.addLeds<LED_TYPE, PIN_LED_LARGE_RING, COLOR_ORDER>(
         ledsLargeRing, NUM_LEDS_LARGE_RING);  //.setCorrection( TypicalLEDStrip );
     FastLED.setBrightness(LED_BRIGHTNESS);
+
+    doPost();
+    delay(1000);  // power-up safety delay
 
     Serial.begin(9600);
 }
@@ -153,6 +154,16 @@ void showSolid(const Pots& pots) {
 
 // **************************************************************************************************************
 void showRunningLights(byte speed, byte largeRingIndex, byte level, const Pots& pots) {
+    static const int colorWheel[] = {
+        HUE_RED,
+        HUE_ORANGE,
+        HUE_YELLOW,
+        HUE_GREEN,
+        HUE_AQUA,
+        HUE_BLUE,
+        HUE_PURPLE,
+        HUE_PINK};
+
     // Large Ring
     const auto a = level;
     const auto b = level + (LEVEL_MAX / 3);
@@ -181,6 +192,65 @@ void showRunningLights(byte speed, byte largeRingIndex, byte level, const Pots& 
 
     FastLED.show();
     delay(10);
+}
+
+void setLargeLeds(int color, int delayMs) {
+    for (auto k = 0; k < NUM_LEDS_LARGE_RING; ++k) {
+        ledsLargeRing[k] = color;
+    }
+    FastLED.show();
+    delay(delayMs);
+}
+
+CRGB colorScroll(int pos) {
+    CRGB color(0, 0, 0);
+    if (pos < 85) {
+        color.g = 0;
+        color.r = ((float)pos / 85.0f) * 255.0f;
+        color.b = 255 - color.r;
+    } else if (pos < 170) {
+        color.g = ((float)(pos - 85) / 85.0f) * 255.0f;
+        color.r = 255 - color.g;
+        color.b = 0;
+    } else if (pos < 256) {
+        color.b = ((float)(pos - 170) / 85.0f) * 255.0f;
+        color.g = 255 - color.b;
+        color.r = 1;
+    }
+    return color;
+}
+
+void doRainbow() {
+    const int LEVELS = 256;
+    for (int j = 0; j < LEVELS; j++) {
+        for (int i = 0; i < NUM_LEDS_LARGE_RING; i++) {
+            ledsLargeRing[i] = colorScroll((i * LEVELS / NUM_LEDS_LARGE_RING + j) % 256);
+        }
+
+        FastLED.show();
+        delay(4);
+    }
+}
+
+void doPost() {
+    FastLED.setBrightness(BRIGHTNESS_INIT);
+    // All LEDs for 1.5 seconds
+    setLargeLeds(CRGB::Gray, 1000);
+    setLargeLeds(CRGB::Black, 1000);
+
+    // flash all LEDs
+    for (auto i = 0; i < 6; ++i) {
+        setLargeLeds(CRGB::DarkBlue, 250);
+        setLargeLeds(CRGB::DarkOrange, 250);
+    }
+
+    // Rainbow
+    // for (auto i = 0; i < 20; ++i) {
+    //     doRainbow();
+    // }
+
+    setLargeLeds(CRGB::Black, 400);
+    FastLED.setBrightness(LED_BRIGHTNESS);
 }
 
 #ifdef READ_POTS
