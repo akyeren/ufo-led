@@ -25,7 +25,7 @@
 #define LEVEL_MAX 255
 
 // Ring sizes
-#define NUM_LEDS_LARGE_RING 30
+#define NUM_LEDS_LARGE_RING 72
 #define NUM_LEDS_SMALL_RING 7
 #define SEGMENT_SIZE 3  // # of groups to divide the large ring into
 
@@ -243,26 +243,93 @@ void doRainbow2() {
     }
 }
 
+void doTail() {
+    FastLED.setBrightness(10);
+    const auto color = CRGB::LightBlue;
+    const auto tailLength = 8;
+    const auto maxBrightness = 255;
+    const auto BRIT = maxBrightness / tailLength;
+    const auto LEVELS = NUM_LEDS_LARGE_RING;
+
+    const auto minSpeed = 0.1f;  // step per millisecond
+    const auto maxSpeed = 4.0f;
+    auto speed = minSpeed;
+    auto acceleration = 0.1f;
+    const auto minDelay = 1.0f;
+    auto step = 1;
+    auto rep = 0;
+
+    for (auto delayMs = static_cast<int>(static_cast<float>(step) / speed);;) {
+        for (auto k = 0; k < LEVELS; k += step) {
+            for (auto i = 0; i < NUM_LEDS_LARGE_RING; ++i) {
+                auto j = i + k;
+                if (j > NUM_LEDS_LARGE_RING)
+                    j -= NUM_LEDS_LARGE_RING;
+                if (j <= tailLength) {
+                    ledsLargeRing[i] = color;
+                    ledsLargeRing[i].fadeLightBy(BRIT * j);
+                } else {
+                    ledsLargeRing[i] = CRGB::Black;
+                }
+            }
+            FastLED.show();
+            delay(delayMs);
+        }
+
+        // when it's fast enough and for a while
+        if (speed >= maxSpeed) {
+            // reverse
+            speed = maxSpeed;
+            if (++rep > 2) {
+                if (acceleration > 0)
+                    acceleration = -acceleration;
+                rep = 0;
+            } else {
+                continue;
+            }
+        } else if (speed <= minSpeed) {
+            // reverse
+            speed = minSpeed;
+            if (++rep > 1) {
+                if (acceleration < 0)
+                    acceleration = -acceleration;
+                rep = 0;
+            } else {
+                continue;
+            }
+        }
+        speed += acceleration;
+        while (acceleration < 0 && static_cast<float>(step) / speed > minDelay && step > 2)  // step could be smaller
+            --step;
+
+        while (static_cast<float>(step) / speed < minDelay)  // step too small
+            ++step;
+
+        delayMs = static_cast<int>(static_cast<float>(step) / speed);
+    }
+}
+
 void doPost() {
     FastLED.setBrightness(BRIGHTNESS_INIT);
+    doTail();
     // All LEDs for 1.5 seconds
-    setLargeLeds(CRGB::White, 1000);
-    setLargeLeds(CRGB::Black, 1000);
+    // setLargeLeds(CRGB::White, 1000);
+    // setLargeLeds(CRGB::Black, 1000);
 
-    // flash all LEDs
-    for (auto i = 0; i < 6; ++i) {
-        setLargeLeds(CRGB::Red, 250);
-        setLargeLeds(CRGB::Yellow, 250);
-        setLargeLeds(CRGB::Green, 250);
-        setLargeLeds(CRGB::Blue, 250);
-    }
+    // // flash all LEDs
+    // for (auto i = 0; i < 6; ++i) {
+    //     setLargeLeds(CRGB::Red, 250);
+    //     setLargeLeds(CRGB::Yellow, 250);
+    //     setLargeLeds(CRGB::Green, 250);
+    //     setLargeLeds(CRGB::Blue, 250);
+    // }
 
-    // Rainbow
-    for (auto i = 0; i < 20; ++i) {
-        doRainbow2();
-    }
+    // // Rainbow
+    // for (auto i = 0; i < 20; ++i) {
+    //     doRainbow2();
+    // }
 
-    setLargeLeds(CRGB::Black, 400);
+    // setLargeLeds(CRGB::Black, 400);
     FastLED.setBrightness(LED_BRIGHTNESS);
 }
 
