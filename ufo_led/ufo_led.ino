@@ -17,7 +17,7 @@
 // #define READ_POTS  // undef = manual mode, def = use potentiometers
 #define PULSE_SPEED_MAX 600
 #define PULSE_SPEED_INIT 100  // 0 .. 600 Pulse Speed, > 600 no Pulse
-#define BRIGHTNESS_INIT 10    // 0 .. 255
+#define BRIGHTNESS_INIT 1     // 0 .. 255
 #define DBG_PRINT             // printing debug to serial message
 
 // Animation settings
@@ -154,16 +154,6 @@ void showSolid(const Pots& pots) {
 
 // **************************************************************************************************************
 void showRunningLights(byte speed, byte largeRingIndex, byte level, const Pots& pots) {
-    static const int colorWheel[] = {
-        HUE_RED,
-        HUE_ORANGE,
-        HUE_YELLOW,
-        HUE_GREEN,
-        HUE_AQUA,
-        HUE_BLUE,
-        HUE_PURPLE,
-        HUE_PINK};
-
     // Large Ring
     const auto a = level;
     const auto b = level + (LEVEL_MAX / 3);
@@ -194,7 +184,7 @@ void showRunningLights(byte speed, byte largeRingIndex, byte level, const Pots& 
     delay(10);
 }
 
-void setLargeLeds(int color, int delayMs) {
+void setLargeLeds(CRGB color, int delayMs) {
     for (auto k = 0; k < NUM_LEDS_LARGE_RING; ++k) {
         ledsLargeRing[k] = color;
     }
@@ -232,22 +222,45 @@ void doRainbow() {
     }
 }
 
+void doRainbow2() {
+    static const CRGB colorWheel[] = {
+        CRGB::Red,
+        CRGB::Orange,
+        CRGB::Yellow,
+        CRGB::Green,
+        CRGB::Aqua,
+        CRGB::Blue,
+        CRGB::Purple,
+        CRGB::Pink};
+    const auto Colors = 8;
+    const int LEVELS = 256;
+    for (int k = 0; k < LEVELS; ++k) {
+        for (int i = 0; i < NUM_LEDS_LARGE_RING; i++) {
+            ledsLargeRing[i] = colorWheel[(i + k) % Colors];
+        }
+        FastLED.show();
+        delay(200);
+    }
+}
+
 void doPost() {
     FastLED.setBrightness(BRIGHTNESS_INIT);
     // All LEDs for 1.5 seconds
-    setLargeLeds(CRGB::Gray, 1000);
+    setLargeLeds(CRGB::White, 1000);
     setLargeLeds(CRGB::Black, 1000);
 
     // flash all LEDs
     for (auto i = 0; i < 6; ++i) {
-        setLargeLeds(CRGB::DarkBlue, 250);
-        setLargeLeds(CRGB::DarkOrange, 250);
+        setLargeLeds(CRGB::Red, 250);
+        setLargeLeds(CRGB::Yellow, 250);
+        setLargeLeds(CRGB::Green, 250);
+        setLargeLeds(CRGB::Blue, 250);
     }
 
     // Rainbow
-    // for (auto i = 0; i < 20; ++i) {
-    //     doRainbow();
-    // }
+    for (auto i = 0; i < 20; ++i) {
+        doRainbow2();
+    }
 
     setLargeLeds(CRGB::Black, 400);
     FastLED.setBrightness(LED_BRIGHTNESS);
