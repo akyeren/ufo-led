@@ -276,13 +276,21 @@ void doTail() {
 
     const auto minSpeed = 0.1f;  // step per millisecond
     const auto maxSpeed = 4.0f;
+    const auto minDelay = 1.0f;
     auto speed = minSpeed;
     auto acceleration = 0.1f;
-    const auto minDelay = 1.0f;
     auto step = 1;
     auto rep = 0;
 
-    for (auto delayMs = static_cast<int>(static_cast<float>(step) / speed);;) {
+    auto clampSpeed = [&]() {
+        if (speed > maxSpeed)
+            speed = maxSpeed;
+        if (speed < minSpeed)
+            speed = minSpeed;
+        return speed == minSpeed || speed == maxSpeed;
+    };
+
+    while (1) {
         for (auto k = 0; k < LEVELS; k += step) {
             for (auto i = 0; i < NUM_LEDS_LARGE_RING; ++i) {
                 auto j = i + k;
@@ -296,39 +304,22 @@ void doTail() {
                 }
             }
             FastLED.show();
-            delay(delayMs);
+            delay(static_cast<int>(static_cast<float>(step) / speed));
         }
 
-        // when it's fast enough and for a while
-        if (speed >= maxSpeed) {
-            // reverse
-            speed = maxSpeed;
-            if (++rep > 2) {
-                if (acceleration > 0)
-                    acceleration = -acceleration;
-                rep = 0;
-            } else {
-                continue;
-            }
-        } else if (speed <= minSpeed) {
-            // reverse
-            speed = minSpeed;
-            if (++rep > 1) {
-                if (acceleration < 0)
-                    acceleration = -acceleration;
-                rep = 0;
-            } else {
-                continue;
-            }
-        }
         speed += acceleration;
+
+        if (clampSpeed()) {
+            if (++rep <= 2) continue;
+            acceleration = -acceleration;  // reverse
+            rep = 0;
+        }
+
         while (acceleration < 0 && static_cast<float>(step) / speed > minDelay && step > 2)  // step could be smaller
             --step;
 
         while (static_cast<float>(step) / speed < minDelay)  // step too small
             ++step;
-
-        delayMs = static_cast<int>(static_cast<float>(step) / speed);
     }
 }
 
