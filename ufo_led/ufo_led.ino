@@ -12,17 +12,10 @@
 // Ring sizes
 #define NUM_LEDS_LARGE_RING 72
 #define NUM_LEDS_SMALL_RING 7
-#define SEGMENT_SIZE 3  // # of groups to divide the large ring into
-
-#define NUM_LEDS_LARGE_SEGMENT NUM_LEDS_LARGE_RING / SEGMENT_SIZE
 
 // Pin configuration
 #define PIN_LED_LARGE_RING 4  // D4
 #define PIN_LED_SMALL_RING 6  // D6
-#define PIN_POT_PULSE_SPEED A0
-#define PIN_POT_LARGE_COLOR A2
-#define PIN_POT_SMALL_COLOR A4
-#define PIN_POT_BRIGHTNESS A6
 
 // LED HW settings
 #define LED_TYPE WS2812B
@@ -51,15 +44,16 @@ struct Pots {
 // Macros
 #define MakeHsv(h, v) CHSV(h, (h >= 1) ? 255 : 0, v)
 
-// **************************************************************************************************************
+/**
+ * Initialize Arduino
+ */
 void setup() {
     FastLED.addLeds<LED_TYPE, PIN_LED_SMALL_RING, COLOR_ORDER>(
-        ledsSmallRing, NUM_LEDS_SMALL_RING);  //.setCorrection( TypicalLEDStrip );
-    FastLED.setBrightness(LED_BRIGHTNESS);
+        ledsSmallRing, NUM_LEDS_SMALL_RING);
 
     FastLED.addLeds<LED_TYPE, PIN_LED_LARGE_RING, COLOR_ORDER>(
-        ledsLargeRing, NUM_LEDS_LARGE_RING);  //.setCorrection( TypicalLEDStrip );
-    FastLED.setBrightness(LED_BRIGHTNESS);
+        ledsLargeRing, NUM_LEDS_LARGE_RING);
+    FastLED.setBrightness(BRIGHTNESS_INIT);
 
     doPost();
     delay(1000);  // power-up safety delay
@@ -67,12 +61,24 @@ void setup() {
     Serial.begin(9600);
 }
 
+/**
+ * Dim an LED on a given ring
+ * @param ring The ring of LEDs
+ * @param size Number of LEDs on the ring
+ * @param index the current index
+ * @param offset the offset
+ * @param dec decrement
+ */
 void dimRingLed(int ring[], byte size, byte index, byte offset, byte dec) {
     const auto target = (size + index - offset) % size;
     ring[target] -= min(ring[target], dec);
 }
 
-// **************************************************************************************************************
+/**
+ * Set the LEDs on the small ring
+ * @param speed The speed of variation
+ * @param pots display configuration
+ */
 void setSmallRing(byte speed, const Pots& pots) {
     static int ring[] = {0, 0, 100, 0, 0, 0, 0};
     static auto index = 2;  // 0 .. NUM_LEDS_SMALL_RING - 1
@@ -113,7 +119,10 @@ void setSmallRing(byte speed, const Pots& pots) {
 #endif
 }
 
-// **************************************************************************************************************
+/**
+ * Show solid color on all the LEDs
+ * @param pots display configuration
+ */
 void showSolid(const Pots& pots) {
     for (auto k = 0; k < NUM_LEDS_LARGE_RING; ++k) {
         ledsLargeRing[k] = MakeHsv(pots.hueLargeRing, 255);
@@ -137,8 +146,17 @@ void showSolid(const Pots& pots) {
     delay(100);
 }
 
-// **************************************************************************************************************
+/**
+ * Show running lights, a group of lit LEDs separated by a fixed unlit ones
+ * @param speed The speed of variation
+ * @param largeRingIndex The index of the LED on the large ring
+ * @param level the current level of the animation
+ * @param pots display configuration
+ */
 void showRunningLights(byte speed, byte largeRingIndex, byte level, const Pots& pots) {
+    const auto SegmentSize = 3;  // # of groups to divide the large ring into
+    const auto NumLedsLargeSegment = NUM_LEDS_LARGE_RING / SegmentSize;
+
     // Large Ring
     const auto a = level;
     const auto b = level + (LEVEL_MAX / 3);
@@ -148,8 +166,8 @@ void showRunningLights(byte speed, byte largeRingIndex, byte level, const Pots& 
     const byte levels[] = {LEVEL_MAX - c, LEVEL_MAX - b, LEVEL_MAX - a,
                            c, b, a};  // NUM_LEDS
 
-    for (auto seg = 0; seg < SEGMENT_SIZE; ++seg) {
-        const auto index = largeRingIndex + seg * NUM_LEDS_LARGE_SEGMENT;
+    for (auto seg = 0; seg < SegmentSize; ++seg) {
+        const auto index = largeRingIndex + seg * NumLedsLargeSegment;
         for (auto offset = 0; offset < NUM_LEDS; ++offset) {
             ledsLargeRing[(index + offset) % NUM_LEDS_LARGE_RING] =
                 CHSV(pots.hueLargeRing, sat, min(levels[offset], pots.brightness));
@@ -160,8 +178,8 @@ void showRunningLights(byte speed, byte largeRingIndex, byte level, const Pots& 
     const auto smallRingSpeed = max(1, speed / 5);
     setSmallRing(smallRingSpeed, pots);
 
-    for (auto seg = 0; seg < SEGMENT_SIZE; ++seg) {
-        ledsLargeRing[(largeRingIndex + seg * NUM_LEDS_LARGE_SEGMENT) % NUM_LEDS_LARGE_RING] =
+    for (auto seg = 0; seg < SegmentSize; ++seg) {
+        ledsLargeRing[(largeRingIndex + seg * NumLedsLargeSegment) % NUM_LEDS_LARGE_RING] =
             CRGB::Black;
     }
 
@@ -169,6 +187,11 @@ void showRunningLights(byte speed, byte largeRingIndex, byte level, const Pots& 
     delay(10);
 }
 
+/**
+ * Set the LEDs on the large ring to a color and delay for some milliseconds
+ * @param color the color of the LEDs to be set
+ * @param delayMs delay in milliseconds
+ */
 void setLargeLeds(CRGB color, int delayMs) {
     for (auto k = 0; k < NUM_LEDS_LARGE_RING; ++k) {
         ledsLargeRing[k] = color;
@@ -177,6 +200,10 @@ void setLargeLeds(CRGB color, int delayMs) {
     delay(delayMs);
 }
 
+/**
+ * Scroll the color wheel
+ * @param pos position of the wheel [0,255]
+ */
 CRGB colorScroll(int pos) {
     CRGB color(0, 0, 0);
     if (pos < 85) {
@@ -195,6 +222,9 @@ CRGB colorScroll(int pos) {
     return color;
 }
 
+/**
+ * Perform an analog rainbow effect, each individual LED smoothly transitions
+ */
 void doRainbow() {
     const int LEVELS = 256;
     for (int j = 0; j < LEVELS; j++) {
@@ -207,6 +237,9 @@ void doRainbow() {
     }
 }
 
+/**
+ * Perform a simple rainbow effect, a fixed pattern of rainbow colors moves in one direction
+ */
 void doRainbow2() {
     static const CRGB colorWheel[] = {
         CRGB::Red,
@@ -220,7 +253,7 @@ void doRainbow2() {
     const auto Colors = 8;
     const int LEVELS = 256;
     for (int k = 0; k < LEVELS; ++k) {
-        for (int i = 0; i < NUM_LEDS_LARGE_RING; i++) {
+        for (int i = 0; i < NUM_LEDS_LARGE_RING; ++i) {
             ledsLargeRing[i] = colorWheel[(i + k) % Colors];
         }
         FastLED.show();
@@ -228,6 +261,11 @@ void doRainbow2() {
     }
 }
 
+/**
+ * Perform a tail effect, a series of brightness gradient LEDs moves along the
+ * direction of the head (brightest LED).
+ * The speed increases to max speed, then slows down to min speed and so on so forth.
+ */
 void doTail() {
     FastLED.setBrightness(10);
     const auto color = CRGB::LightBlue;
@@ -294,8 +332,10 @@ void doTail() {
     }
 }
 
+/**
+ * Show self test pattern
+ */
 void doPost() {
-    FastLED.setBrightness(BRIGHTNESS_INIT);
     doTail();
     // All LEDs for 1.5 seconds
     // setLargeLeds(CRGB::White, 1000);
@@ -315,10 +355,12 @@ void doPost() {
     // }
 
     // setLargeLeds(CRGB::Black, 400);
-    FastLED.setBrightness(LED_BRIGHTNESS);
+    // FastLED.setBrightness(LED_BRIGHTNESS);
 }
 
-// **************************************************************************************************************
+/**
+ * Main loop
+ */
 void loop() {
     auto speed = 1;
     bool finishLoop = false;
