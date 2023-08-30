@@ -1,20 +1,5 @@
 #include <FastLED.h>
 
-// ********************************************************
-//                    !!! Important !!!
-//       Install the library!
-//       Sketch -> include Library -> Manage Libraries
-//       search for 'fastled'
-//       install the library
-//
-//       by OneIdMONstr
-// ********************************************************
-
-// ***************************************************************
-// ********* CONFIGURE *******************************************
-// ***************************************************************
-
-// #define READ_POTS  // undef = manual mode, def = use potentiometers
 #define PULSE_SPEED_MAX 600
 #define PULSE_SPEED_INIT 100  // 0 .. 600 Pulse Speed, > 600 no Pulse
 #define BRIGHTNESS_INIT 1     // 0 .. 255
@@ -333,15 +318,6 @@ void doPost() {
     FastLED.setBrightness(LED_BRIGHTNESS);
 }
 
-#ifdef READ_POTS
-void readPots(Pots& pots) {
-    pots.pulseSpeed = 1024 - analogRead(PIN_POT_PULSE_SPEED);
-    pots.brightness = 254 - map(analogRead(PIN_POT_BRIGHTNESS), 0, 1024, 0, 255);
-    pots.hueSmallRing = 252 - map(analogRead(PIN_POT_SMALL_COLOR), 0, 1024, 0, 255);
-    pots.hueLargeRing = 252 - map(analogRead(PIN_POT_LARGE_COLOR), 0, 1024, 0, 255);
-}
-#endif
-
 // **************************************************************************************************************
 void loop() {
     auto speed = 1;
@@ -349,9 +325,6 @@ void loop() {
     Pots pots;
     for (auto largeRingIndex = 0; largeRingIndex < NUM_LEDS_LARGE_RING && !finishLoop; ++largeRingIndex) {
         for (auto level = 0; level < LEVEL_MAX / 3; level += speed) {
-#ifdef READ_POTS
-            readPots(pots);
-#endif
             if (pots.pulseSpeed > PULSE_SPEED_MAX) {
                 showSolid(pots);
                 finishLoop = true;
